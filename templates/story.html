@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Interactive Story</title>
+<style>
+body {
+font-family: sans-serif;
+}
+h1 {
+font-size: 24px;
+margin-bottom: 16px;
+}
+p {
+margin-bottom: 16px;
+}
+form {
+display: flex;
+flex-direction: column;
+}
+label {
+margin-bottom: 8px;
+}
+input[type="radio"] {
+margin-right: 8px;
+}
+button {
+cursor: pointer;
+padding: 8px 16px;
+border: 1px solid #000;
+background-color: #eee;
+color: #000;
+text-decoration: none;
+}
+</style>
+</head>
+<body>
+<h1>Interactive Story</h1>
+<p id="story"></p>
+<form action="/story" method="POST">
+<input type="hidden" name="story" id="story-input">
+<div id="choices"></div>
+<button type="submit">Continue</button>
+</form>
+<script>
+// Get the story and choices elements
+const storyElement = document.getElementById('story');
+const choicesElement = document.getElementById('choices');
+
+// Function to display the story and choices
+function displayStory(story, choices) {
+// Update the story text
+storyElement.textContent = story;
+
+// Clear the choices element
+choicesElement.innerHTML = '';
+
+// Create a new button for each choice
+choices.forEach(choice => {
+const button = document.createElement('button');
+button.type = 'submit';
+button.name = 'choice';
+button.value = choice.value;
+button.textContent = choice.text;
+
+// Append the button to the choices element
+choicesElement.appendChild(button);
+});
+}
+
+// Get the initial story and choices from the server
+fetch('/story?choice=start')
+.then(response => response.json())
+.then(data => {
+// Display the initial story and choices
+displayStory(data.story, data.choices);
+
+// Add an event listener for the form submission
+const form = document.querySelector('form');
+form.addEventListener('submit', event => {
+event.preventDefault();
+
+// Get the user's choice
+const choice = event.target.querySelector('input[name="choice"]:checked');
+
+// Send the choice to the server
+fetch('/story', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({
+choice: choice.value,
+story: storyElement.textContent
+})
+})
+.then(response => response.json())
+.then(data => {
+// Display the next story and choices
+displayStory(data.story, data.choices);
+});
+});
+});
+</script>
+</body>
+</html>
+
+
